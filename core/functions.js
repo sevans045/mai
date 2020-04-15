@@ -103,7 +103,7 @@ module.exports = (client) => {
   client.loadCommand = (commandName) => {
     try {
       client.logger.log(`Loading Command: ${commandName}`);
-      const props = require(`../commands/${commandName}`);
+      const props = require(`../discordcommands/${commandName}`);
       if (props.init) {
         props.init(client);
       }

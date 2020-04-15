@@ -5,12 +5,21 @@ const net = require("net");
 const fs = require("fs");
 const EventEmitter = require("events");
 require("console-stamp")(console, "HH:MM:ss");
+const { promisify } = require("util");
+const readdir = promisify(require("fs").readdir);
+const Enmap = require("enmap");
+const EnmapLevel = require("enmap-sqlite");
 
 // Load Discord related things
 const Discord = require("discord.js");
 //const SQLite = require("better-sqlite3");
 //const sql = new SQLite("./scores.sqlite");
 const DiscordClient = new Discord.Client({autoReconnect: true});
+
+// Aliases and commands are put in collections where they can be read from,
+// catalogued, listed, etc.
+DiscordClient.commands = new Enmap();
+DiscordClient.aliases = new Enmap();
 
 // TCP/RenX
 var client;
@@ -101,16 +110,6 @@ DiscordClient.on("message", message => {
 
   if (message.content.startsWith(prefix + "ping")) message.channel.send("pong");
 
-  if (message.content.startsWith(prefix + "pi")) 
-    PlayerManager.Players.forEach(Player => {
-      string = "";
-
-      for (var [key, value] of Object.entries(Player)) {
-        string += `**${key}:** ${value} `;
-      }
-      message.channel.send(string);
-    });
-
   if (!message.content.startsWith(prefix))
     client.write(`cHostSay ${message.author.username}: ${message.content}\n`);
 });
@@ -146,7 +145,45 @@ function SendMessages() {
   });
 }
 
-DiscordClient.login(DiscordClient.config.token);
+const init = async () => {
+
+  // Here we load **commands** into memory, as a collection, so they're accessible
+  // here and everywhere else.
+  const cmdFiles = await readdir("./discordcommands/");
+  console.log(`Loading a total of ${cmdFiles.length} commands.`);
+  cmdFiles.forEach(f => {
+    if (!f.endsWith(".js")) return;
+    const response = DiscordClient.loadCommand(f);
+    if (response) console.log(response);
+  });
+
+  // Then we load events, which will include our message and ready event.
+  const evtFiles = await readdir("./discordevents/");
+  console.log(`Loading a total of ${evtFiles.length} events.`);
+  evtFiles.forEach(file => {
+    const eventName = file.split(".")[0];
+    console.log(`Loading Event: ${eventName}`);
+    const event = require(`./discordevents/${file}`);
+    // Bind the DiscordClient to any event, before the existing arguments
+    // provided by the discord.js event.
+    // This line is awesome by the way. Just sayin'.
+    DiscordClient.on(eventName, event.bind(null, DiscordClient));
+  });
+
+  // Generate a cache of client permissions for pretty perm names in commands.
+  DiscordClient.levelCache = {};
+  for (let i = 0; i < DiscordClient.config.permLevels.length; i++) {
+    const thisLevel = DiscordClient.config.permLevels[i];
+    DiscordClient.levelCache[thisLevel.name] = thisLevel.level;
+  }
+
+  // Here we login the client.
+  DiscordClient.login(DiscordClient.config.token);
+
+// End top-level async/await function.
+};
+
+init();
 
 Connect();
 
