@@ -1,0 +1,27 @@
+{
+  "name": "mai",
+  "version": "0.0.1",
+  "description": "NodeJS Discord moderation platform for Renegade X",
+  "main": "main.js",
+  "dependencies": {
+    "colors": "^1.3.3",
+    "console-stamp": "^0.2.7",
+    "discord.js": "^11.4.2",
+    "eslint": "^6.7.2",
+    "moment": "^2.24.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sevans045/mai.git"
+  },
+  "author": "arie",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sevans045/mai/issues"
+  },
+  "homepage": "https://github.com/sevans045/mai#readme"
+}
