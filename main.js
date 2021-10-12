@@ -56,7 +56,6 @@ exports.RXEmit = function(eventName, ...args) {
 
 // How we communicate with Discord
 exports.DiscordSay = function(channels, text) {
-
   if (gdiicon != null)
     text = text.replace(/%gdi%/gi, gdiicon);
   if (nodicon != null)
@@ -69,12 +68,15 @@ exports.DiscordSay = function(channels, text) {
 exports.StartClientListLoop = function() {
   ClientListLoop();
   setInterval(ClientListLoop, 5000);
+  setInterval(ClientListLoopBot, 7500);
 };
 
 function ClientListLoop() {
   client.write("cClientVarList NAME ID IP HWID PING TEAM STEAM ADMIN SCORE CREDITS CHARACTER\n");
-  
-  //client.write("cBotVarList NAME ID TEAM SCORE CREDITS CHARACTER\n");
+}
+
+function ClientListLoopBot() {
+  client.write("cBotVarList ID NAME TEAM SCORE CREDITS CHARACTER\n");
 }
 
 const sleep = (ms) => {
@@ -86,6 +88,9 @@ DiscordClient.on("ready", () => {
   console.info("Starting Discord client");
 
   guild = DiscordClient.guilds.first();
+
+  if (guild == null)
+    throw new Error("This bot is was not invited to any guild");
 
   Object.keys(config.channels).forEach(function(channel) {
     if (!Object.keys(loadedchannels).includes(config.channels[channel]))
@@ -106,9 +111,8 @@ DiscordClient.on("ready", () => {
 DiscordClient.on("message", message => {
   if (message.author === DiscordClient.user) return;
 
-  var string = "";
-
   if (message.content.startsWith(prefix + "ping")) message.channel.send("pong");
+  if (message.content.startsWith(prefix + "rc") && permlevel(message) >= 3) client.write(`c${message.content.slice(0, message.content.length - 3)}`);
 
   if (!message.content.startsWith(prefix))
     client.write(`cHostSay ${message.author.username}: ${message.content}\n`);

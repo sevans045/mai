@@ -15,6 +15,7 @@ var responseBuffer = "";
 
 exports.ProcessRawData = (main, data) => {
   data = String(data); //Convert the object received from the connection to a string.
+  console.log(data);
   const nostripdata = data.split(""); // Non-stripped type.
   data = data.substr(1); //Strip the type ID.
   data = data.split(""); //Split the raw message into seperate strings, removing the delimiter.
@@ -58,7 +59,7 @@ exports.ProcessRawData = (main, data) => {
   } 
   else if (responseBuffer.length > 0 && nostripdata[0] != "rNAME") {
     responseBuffer = [...responseBuffer, ...data];
-    console.info(responseBuffer);
+    //console.info(responseBuffer);
   }
 
   if (responseBuffer.length > 0 && responseBuffer.last().includes("c\n")) {
@@ -67,7 +68,7 @@ exports.ProcessRawData = (main, data) => {
     return;
   }
 
-  console.log(data);
+  //console.log(data);
 
   processData(data);
 
